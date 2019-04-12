@@ -1,0 +1,38 @@
+require 'rake/clean'
+
+REQUIRED_MRUBY_FILES = %w(
+  /opt/mruby/build/ev3/lib/libmruby.a
+  /opt/mruby/build/host/bin/mrbc
+  /opt/mruby/build/host/lib/libmruby.a
+).freeze
+
+CLEAN.include('mrblib/*.c')
+CLOBBER.include('mrblib/*.c', 'bin/ev3_app*')
+
+file '/opt/mruby/build/host/bin/mrbc' => :mruby
+file '/opt/mruby/build/ev3/lib/libmruby.a' => :mruby
+file '/opt/mruby/build/host/lib/libmruby.a' => :mruby
+
+file 'bin/ev3_app' => %w(/opt/mruby/build/host/lib/libmruby.a mrblib/ev3_app.c) do
+  sh 'gcc -std=c99 -I/opt/mruby/include ev3_app.c -o bin/ev3_app /opt/mruby/build/host/lib/libmruby.a -lm'
+end
+
+file 'bin/ev3_app-arm' => %w(/opt/mruby/build/ev3/lib/libmruby.a mrblib/ev3_app.c) do
+  sh 'arm-linux-gnueabi-gcc -std=c99 -I/opt/mruby/include ev3_app.c -o bin/ev3_app-arm /opt/mruby/build/ev3/lib/libmruby.a -lm'
+end
+
+rule '.c' => ['.rb'] do |target|
+  sh "/opt/mruby/build/host/bin/mrbc -Bev3_app_ruby_symbol #{target.source}"
+end
+
+desc 'Builds mruby'
+task :mruby do
+  Dir.chdir('/opt/mruby') do
+    sh './minirake' unless REQUIRED_MRUBY_FILES.all? { |fn| File.exist?(fn) }
+  end
+end
+
+desc 'Builds all targets'
+task :all => [:mruby, 'bin/ev3_app', 'bin/ev3_app-arm']
+
+task :default => :all

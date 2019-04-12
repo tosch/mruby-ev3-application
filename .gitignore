@@ -1,0 +1,29 @@
+### Ruby
+*.gem
+*.rbc
+/app/.config
+/app/coverage/
+/app/InstalledFiles
+/app/pkg/
+/app/spec/reports/
+/app/spec/examples.txt
+/app/test/tmp/
+/app/test/version_tmp/
+/app/tmp/
+
+### Generated C files
+/app/mrblib/*.c
+
+### Built Apps
+/app/bin/*
+
+## Environment normalization:
+/app/.bundle/
+/app/vendor/bundle
+/app/lib/bundler/man/
+
+### IDEs
+/.idea
+/.vscode
+*.code-workspace
+

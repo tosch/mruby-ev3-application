@@ -1,0 +1,17 @@
+---
+version: '3.3'
+services:
+  ev3crossbuilder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      MRUBY_CONFIG: /opt/app/build_conf.rb
+    volumes:
+      - type: "bind"
+        source: "../mruby"
+        target: "/opt/mruby"
+      - type: "bind"
+        source: "../app"
+        target: "/opt/app"
+
