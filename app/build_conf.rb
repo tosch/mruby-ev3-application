@@ -1,3 +1,5 @@
+ev3_gem_path = File.expand_path(File.join('..', 'mruby-ev3'), __dir__)
+
 # Define cross build settings for MINDSTORMS EV3
 MRuby::CrossBuild.new('ev3') do |conf|
   toolchain :gcc
@@ -10,10 +12,20 @@ MRuby::CrossBuild.new('ev3') do |conf|
   conf.build_mrbtest_lib_only
 
   conf.gembox 'default'
-  conf.gem :core => 'mruby-bin-mirb'
-  conf.gem :core => 'mruby-bin-mruby'
-  conf.gem :core => 'mruby-io'
-  conf.gem :github => 'iij/mruby-dir', :branch => 'master'
+  conf.gem mgem: 'mruby-logger'
+  conf.gem mgem: 'mruby-simplehttpserver'
+  conf.gem github: 'mattn/mruby-json'
+  conf.gem path: ev3_gem_path
+end
+
+MRuby::Build.new('test') do |conf|
+  toolchain :gcc
+
+  conf.enable_test
+
+  conf.gembox 'default'
+  conf.gem path: ev3_gem_path
+  conf.gem :github => 'iij/mruby-mtest', :branch => 'master'
 end
 
 MRuby::Build.new do |conf|
@@ -31,10 +43,7 @@ MRuby::Build.new do |conf|
 
   # include the default GEMs
   conf.gembox 'default'
-  conf.gem :core => 'mruby-bin-mirb'
-  conf.gem :core => 'mruby-bin-mruby'
-  conf.gem :core => 'mruby-io'
-  conf.gem :github => 'iij/mruby-dir', :branch => 'master'
+  conf.gem path: ev3_gem_path
 
   # C compiler settings
   # conf.cc do |cc|
