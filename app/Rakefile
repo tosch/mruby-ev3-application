@@ -1,38 +1,77 @@
 require 'rake/clean'
 
 REQUIRED_MRUBY_FILES = %w(
-  /opt/mruby/build/ev3/lib/libmruby.a
-  /opt/mruby/build/host/bin/mrbc
-  /opt/mruby/build/host/lib/libmruby.a
+  ../mruby/build/ev3/lib/libmruby.a
+  ../mruby/build/host/bin/mrbc
+  ../mruby/build/host/lib/libmruby.a
+  ../mruby/build/test/bin/mruby
 ).freeze
 
-CLEAN.include('mrblib/*.c')
-CLOBBER.include('mrblib/*.c', 'bin/ev3_app*')
+CLEAN.include('src/*-app_loader.c', 'src/*-ruby_bytecode.c')
+CLOBBER.include('src/*-app_loader.c', 'src/*-ruby_bytecode.c', 'bin/*')
 
-file '/opt/mruby/build/host/bin/mrbc' => :mruby
-file '/opt/mruby/build/ev3/lib/libmruby.a' => :mruby
-file '/opt/mruby/build/host/lib/libmruby.a' => :mruby
-
-file 'bin/ev3_app' => %w(/opt/mruby/build/host/lib/libmruby.a mrblib/ev3_app.c) do
-  sh 'gcc -std=c99 -I/opt/mruby/include ev3_app.c -o bin/ev3_app /opt/mruby/build/host/lib/libmruby.a -lm'
+REQUIRED_MRUBY_FILES.each do |filename|
+  file filename => :mruby
 end
 
-file 'bin/ev3_app-arm' => %w(/opt/mruby/build/ev3/lib/libmruby.a mrblib/ev3_app.c) do
-  sh 'arm-linux-gnueabi-gcc -std=c99 -I/opt/mruby/include ev3_app.c -o bin/ev3_app-arm /opt/mruby/build/ev3/lib/libmruby.a -lm'
+RUBY_SOURCE_FILES = FileList['mrblib/**/*.rb']
+
+rule %r{^src/.+-debug-ruby_bytecode\.c$} => [proc { |tn| tn.sub(%r{^src/}, 'mrblib/').sub(%r{-debug-ruby_bytecode\.c$}, '.rb') }, '../mruby/build/host/bin/mrbc'] do |target|
+  sh "../mruby/build/host/bin/mrbc -g -Bev3_app_ruby_symbol -o#{target.name} #{target.source}"
 end
 
-rule '.c' => ['.rb'] do |target|
-  sh "/opt/mruby/build/host/bin/mrbc -Bev3_app_ruby_symbol #{target.source}"
+rule %r{^src/.+-ruby_bytecode\.c$} => [proc { |tn| tn.sub(%r{^src/}, 'mrblib/').sub(%r{-ruby_bytecode\.c$}, '.rb') }, '../mruby/build/host/bin/mrbc'] do |target|
+  sh "../mruby/build/host/bin/mrbc -Bev3_app_ruby_symbol -o#{target.name} #{target.source}"
+end
+
+rule %r{^src/.+-app_loader\.c$} => [proc { |tn| tn.sub(%r{-app_loader\.c$}, '-ruby_bytecode.c') }] do |target|
+  skeleton = File.read('src/app_loader_skeleton.c')
+
+  File.write(target.name, skeleton.sub('#{SOURCE}', target.source.sub(%r{^src/}, './')))
+end
+
+rule %r{^bin/.+-host$} => [proc { |tn| tn.sub(%r{^bin/}, 'src/').sub(%r{-host$}, '-app_loader.c') }, '../mruby/build/host/lib/libmruby.a'] do |target|
+  sh "gcc -std=c99 -I/opt/mruby/include #{target.source} -o #{target.name} ../mruby/build/host/lib/libmruby.a -lm"
+end
+
+rule %r{^bin/.+$} => [proc { |tn| tn.sub(%r{^bin/}, 'src/') + '-app_loader.c' }, '../mruby/build/ev3/lib/libmruby.a'] do |target|
+  sh "arm-linux-gnueabi-gcc -std=c99 -I../mruby/include #{target.source} -o #{target.name} ../mruby/build/ev3/lib/libmruby.a -lm"
+end
+
+desc 'Runs the tests'
+task :test => '../mruby/build/test/bin/mruby' do
+  files = FileList['mrblib/**/*.rb']
+  files.each do |file|
+    sh "../mruby/build/test/bin/mruby #{file}"
+  end
 end
 
 desc 'Builds mruby'
 task :mruby do
-  Dir.chdir('/opt/mruby') do
+  Dir.chdir('../mruby') do
     sh './minirake' unless REQUIRED_MRUBY_FILES.all? { |fn| File.exist?(fn) }
   end
 end
 
 desc 'Builds all targets'
-task :all => [:mruby, 'bin/ev3_app', 'bin/ev3_app-arm']
+task(
+  :all => RUBY_SOURCE_FILES.flat_map do |fn|
+            with_bin_dir = fn.sub(%r{^mrblib/}, 'bin/')
+
+            [with_bin_dir.sub(%r{\.rb$}, '-debug'), with_bin_dir.sub(%r{\.rb$}, '')]
+          end
+)
+
+desc 'Copies the binaries to the robot'
+task :export do
+  bins = FileList['bin/**/*'].exclude('*-host')
+
+  sh "scp #{bins} robot@ev3dev.local:bin"
+end
+
+desc 'Copies mirb to the robot'
+task :export_mirb do
+  sh "scp ../mruby/build/ev3/bin/mirb robot@ev3dev.local:bin/"
+end
 
 task :default => :all
