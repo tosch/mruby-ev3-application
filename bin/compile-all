@@ -1,0 +1,5 @@
+#!/bin/sh
+
+COMPOSE_FILE=$(dirname $0)/../docker/docker-compose.yml
+
+docker-compose -f $COMPOSE_FILE run --rm ev3crossbuilder rake all
