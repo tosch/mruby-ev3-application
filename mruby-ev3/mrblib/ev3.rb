@@ -8,6 +8,11 @@ module Ev3
   SYSFS_CLASS_PATH = '/sys/class'
 
   class << self
+    # @return [Ev3::Battery]
+    def battery
+      @battery ||= Ev3::Battery.detect
+    end
+
     # @return [Ev3::DeviceList]
     def sensors
       @sensors ||= Ev3::DeviceList.new(Ev3::Sensors.detect)
