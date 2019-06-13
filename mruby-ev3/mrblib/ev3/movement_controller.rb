@@ -126,12 +126,41 @@ module Ev3
         else
           initial_angle + angle
         end
+      target_angle = if power.negative?
+        initial_angle - angle
+      else
+        initial_angle + angle
+      end
+
+      anti_clockwise = direction.negative? || power.negative?
+
 
       go(power, direction)
 
       block_given? ? yield : nil while direction.negative? ? target_angle <= current_angle : target_angle >= current_angle
+      loop do
+        yield if block_given?
 
-      stop
+        remaining_distance = remaining_angle_distance_for(target_angle, anti_clockwise)
+
+        if remaining_distance <= 5 && remaining_distance > 0
+          go(power.negative? ? -1 : 1, direction)
+        elsif remaining_distance <= 0
+          stop
+          break
+        end
+      end
+      remaining = remaining_angle_distance_for(target_angle, anti_clockwise)
+      if remaining < 0
+        go(power.negative? ? 1 : -1, direction)
+        loop do
+          remaining = remaining_angle_distance_for(target_angle, anti_clockwise)
+          if remaining >= 0
+            stop
+            break
+          end
+        end
+      end
 
       self
     end
@@ -188,6 +217,14 @@ module Ev3
 
     def current_angle
       gyro.value(0)
+    end
+
+    def remaining_angle_distance_for(target_angle, anti_clockwise = false)
+      if anti_clockwise
+        current_angle - target_angle
+      else
+        target_angle - current_angle
+      end
     end
   end
 end
