@@ -25,5 +25,5 @@ MRuby::Gem::Specification.new('mruby-ev3') do |spec|
   spec.add_dependency('mruby-dir', github: 'iij/mruby-dir')
   spec.add_dependency('mruby-errno', github: 'iij/mruby-errno')
   spec.add_dependency('mruby-pure-regexp', github: 'h2so5/mruby-pure-regexp')
-  spec.add_dependency('mruby-rational', github: 'dyama/mruby-rational')
+  spec.add_dependency('mruby-rational', github: 'tosch/mruby-rational', branch: 'fix_comparison_methods')
 end
