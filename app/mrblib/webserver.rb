@@ -155,8 +155,8 @@ APPLICATION = Shelf::Builder.app do
         };
 
         $.Pointer.prototype.draw = function() {
-          this.element.css('left', (197 + this.direction) + 'px');
-          this.element.css('top', (197 - this.power) + 'px');
+          this.element.css('left', (197 + (2 * this.direction)) + 'px');
+          this.element.css('top', (197 - (2 * this.power)) + 'px');
         };
 
         $.Pointer.prototype.changePower = function(step) {
@@ -369,26 +369,30 @@ APPLICATION = Shelf::Builder.app do
   end
 
   post '/power' do
-    power = env['request'].body.strip.to_i
+    run ->(env) do
+      power = env['request'].body.strip.to_i
 
-    if power && Ev3::MovementController::POWER_RANGE.include?(power)
-      movement_state.power = power
+      if power && Ev3::MovementController::POWER_RANGE.include?(power)
+        movement_state.power = power
 
-      [204, {}, []]
-    else
-      [400, {}, ['invalid power value']]
+        [204, {}, []]
+      else
+        [400, {}, ['invalid power value']]
+      end
     end
   end
 
   post '/direction' do
-    direction = env['request'].body.strip.to_i
+    run ->(env) do
+      direction = env['request'].body.strip.to_i
 
-    if direction && Ev3::MovementController::DIRECTION_RANGE.include?(direction)
-      movement_state.direction = direction
+      if direction && Ev3::MovementController::DIRECTION_RANGE.include?(direction)
+        movement_state.direction = direction
 
-      [204, {}, []]
-    else
-      [400, {}, ['invalid direction value']]
+        [204, {}, []]
+      else
+        [400, {}, ['invalid direction value']]
+      end
     end
   end
 end
