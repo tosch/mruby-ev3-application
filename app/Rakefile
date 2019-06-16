@@ -34,6 +34,10 @@ rule %r{^bin/.+-host$} => [proc { |tn| tn.sub(%r{^bin/}, 'src/').sub(%r{-host$},
   sh "gcc -std=c99 -I/opt/mruby/include #{target.source} -o #{target.name} ../mruby/build/host/lib/libmruby.a -lm"
 end
 
+rule %r{^bin/.+-debug$} => [proc { |tn| tn.sub(%r{^bin/}, 'src/').sub(%r{-debug$}, '-debug-app_loader.c') }, '../mruby/build/host/lib/libmruby.a'] do |target|
+  sh "arm-linux-gnueabi-gcc -std=c99 -I../mruby/include #{target.source} -o #{target.name} ../mruby/build/ev3-debug/lib/libmruby.a -lm"
+end
+
 rule %r{^bin/.+$} => [proc { |tn| tn.sub(%r{^bin/}, 'src/') + '-app_loader.c' }, '../mruby/build/ev3/lib/libmruby.a'] do |target|
   sh "arm-linux-gnueabi-gcc -std=c99 -I../mruby/include #{target.source} -o #{target.name} ../mruby/build/ev3/lib/libmruby.a -lm"
 end

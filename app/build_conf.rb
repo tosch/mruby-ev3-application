@@ -3,15 +3,55 @@ ev3_gem_path = File.expand_path(File.join('..', 'mruby-ev3'), __dir__)
 # Define cross build settings for MINDSTORMS EV3
 MRuby::CrossBuild.new('ev3') do |conf|
   toolchain :gcc
+
+  # C compiler settings
   conf.cc.command = 'arm-linux-gnueabi-gcc'
+
+  # Linker settings
   conf.linker.command = 'arm-linux-gnueabi-gcc'
   conf.linker.flags << %w(-static)
   conf.linker.libraries << []
+
+  # Archiver settigns
   conf.archiver.command = 'arm-linux-gnueabi-ar'
 
   conf.build_mrbtest_lib_only
 
+  # Gemset config
+  # Default gembox
   conf.gembox 'default'
+
+  # Other mrbgems
+  conf.gem mgem: 'mruby-logger'
+  conf.gem mgem: 'mruby-simplehttpserver'
+  conf.gem github: 'mattn/mruby-json'
+  conf.gem path: ev3_gem_path
+end
+
+MRuby::CrossBuild.new('ev3-debug') do |conf|
+  toolchain :gcc
+
+  # C compiler settings
+  conf.cc.defines = %w(MRB_ENABLE_DEBUG_HOOK)
+  conf.cc.command = 'arm-linux-gnueabi-gcc'
+
+  # Linker settings
+  conf.linker.command = 'arm-linux-gnueabi-gcc'
+  conf.linker.flags << %w(-static)
+  conf.linker.libraries << []
+
+  # Archiver settings
+  conf.archiver.command = 'arm-linux-gnueabi-ar'
+
+  enable_debug
+
+  # Gemset config
+  conf.gembox 'default'
+
+  # Generate mruby debugger command (require mruby-eval)
+  conf.gem :core => "mruby-bin-debugger"
+
+  # Other mrbgems
   conf.gem mgem: 'mruby-logger'
   conf.gem mgem: 'mruby-simplehttpserver'
   conf.gem github: 'mattn/mruby-json'
