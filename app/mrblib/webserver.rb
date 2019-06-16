@@ -1,3 +1,28 @@
+# Example program that starts a webserver on the EV3 which allows remote-controlling the robot
+#
+# # Installation
+#
+# * build the binary within the cross compiler docker shell
+#
+#       $ bin/cc-shell
+#       $ rake bin/webserver
+#
+# * Copy the binary to the robot into `~/bin`
+# * Download `jquery.min.js` into `~/public/assets` on the robot
+#
+#       wget -O ~/public/assets/jquery.min.js "https://code.jquery.com/jquery-3.4.1.min.js"
+#
+# * Start the webserver on the robot
+#
+#       bin/webserver
+#
+# * Browse to `http://ev3dev.local:8000/`
+# * Cursor up increases the power, down decreases
+# * Cursor left turns the robot to the left when power is non-zero;
+#   the more left, the harder the robot turns (on -100, it turns on the spot)
+# * Cursor right turns the robot right
+# * Space stops the robot and resets the direction
+
 # Define the motors we use
 MOTOR_LEFT = Ev3.motors[:outB]
 MOTOR_RIGHT = Ev3.motors[:outC]
@@ -61,6 +86,8 @@ movement_state = MovementState.new
 APPLICATION = Shelf::Builder.app do
   use Shelf::CommonLogger
   use Shelf::CatchError
+  use Shelf::Static, urls: { '/jquery.min.js' => 'jquery.min.js' }, root: '/home/robot/public/assets'
+  use Shelf::Static, urls: { '/sounds/mechanical/horn_2.wav' => 'mechanical/horn_2.wav' }, root: '/usr/share/sounds/ev3dev'
 
   get '/' do
     use Shelf::ContentLength
@@ -72,7 +99,7 @@ APPLICATION = Shelf::Builder.app do
 <html>
   <head>
     <title>EV3 Remote Control</title>
-    <script src="https://code.jquery.com/jquery-3.4.0.min.js"></script>
+    <script src="/jquery.min.js"></script>
     <style>
       body {
         background: #20262E;
@@ -207,6 +234,11 @@ APPLICATION = Shelf::Builder.app do
               break;
             case "ArrowRight":
               pointer.changeDirection(event.shiftKey ? 5 : 1);
+              break;
+            case "h":
+              audio = new Audio('/sounds/mechanical/horn_2.wav');
+              audio.play();
+              $.post('/honk');
               break;
             default:
               return;
@@ -393,6 +425,14 @@ APPLICATION = Shelf::Builder.app do
       else
         [400, {}, ['invalid direction value']]
       end
+    end
+  end
+
+  post '/honk' do
+    run ->(env) do
+      Ev3.sound.play_wav :'mechanical/horn_2'
+
+      [204, {}, []]
     end
   end
 end
