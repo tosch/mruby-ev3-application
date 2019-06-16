@@ -11,11 +11,11 @@ module Ev3
       cmd << '-N' if block
       cmd << file_path
 
-      system(cmd.join(' '))
+      IO.popen(cmd.join(' '))
     end
 
     def beep(frequency = 750, duration = 100, repetitions = 1, delay = 50)
-      system("beep -f #{frequency} -l #{duration} -r #{repetitions} -D #{delay}")
+      IO.popen("beep -f #{frequency} -l #{duration} -r #{repetitions} -D #{delay}")
     end
 
     def pcm_volume
@@ -35,7 +35,7 @@ module Ev3
     end
 
     private
-    
+
     def path_for_symbol(symbol)
       parts = symbol.to_s.split('/')
       parts[-1] = "#{parts.last}.wav"
@@ -56,7 +56,7 @@ module Ev3
     def write_volume(type, value)
       raise(ArgumentError, "value #{value} is invalid, must be within 0..100") unless (0..100).include?(value)
 
-      system("amixer -q sset #{type} #{value}%")
+      IO.popen("amixer -q sset #{type} #{value}%")
     end
   end
 end
