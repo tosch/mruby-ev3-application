@@ -12,6 +12,10 @@ SPEED = 7
 LEFT_MOTOR.stop_action = :hold
 RIGHT_MOTOR.stop_action = :hold
 
+# Reset Gyro
+GYRO.mode = 'GYRO-CAL'
+GYRO.mode = 'GYRO-ANG'
+
 class PenControl
   attr_reader :motor
 
@@ -80,23 +84,23 @@ class Plotter
     turn_by(-127)
     pen.down
     forward_by(150)
-    turn_by(73) # 74)
+    turn_by(75)#74)
     forward_by(50)
-    turn_by(52) # 53)
+    turn_by(54)#53)
     forward_by(120)
-    turn_by(52) # 53)
+    turn_by(54)#53)
     forward_by(50)
-    turn_by(73) # 74)
+    turn_by(75)#74)
     forward_by(150)
     pen.up
-    turn_by(105) # 106)
+    turn_by(107)#106)
     forward_by(150)
-    turn_by(126) # 127)
+    turn_by(128)#127)
     pen.down
     forward_by(180)
     pen.up
     forward_by(-120)
-    turn_by(75) # 76)
+    turn_by(77)#76)
     pen.down
     forward_by(124)
     pen.up
@@ -107,12 +111,12 @@ class Plotter
     forward_by(50)
     turn_by(-105) # -106)
     forward_by(50)
-    turn_by(105) # 106)
+    turn_by(107)#106)
     forward_by(50)
     pen.up
-    turn_by(126) # 127)
+    turn_by(128)#127)
     forward_by(120)
-    turn_by(126) # 127)
+    turn_by(128)#127)
     pen.down
     forward_by(50)
     pen.up
